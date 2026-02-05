@@ -1,0 +1,1580 @@
+{
+  "title": "BAT Security Report",
+  "project": "test_vulnerable.c",
+  "scan_date": "2026-02-05T21:58:42.978442",
+  "summary": {
+    "total_vulnerabilities": 24,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 20,
+      "MEDIUM": 3,
+      "LOW": 0
+    },
+    "type_distribution": {
+      "BUFFER_OVERFLOW": 10,
+      "USE_AFTER_FREE": 11,
+      "INTEGER_OVERFLOW": 3
+    },
+    "files_analyzed": 1,
+    "functions_analyzed": 0
+  },
+  "findings": [
+    {
+      "id": 1,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:29",
+      "sink": "gets",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "gets",
+        "location": "test_vulnerable.c:29",
+        "input_source": "fgets",
+        "source_type": "file_input",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:152 Source: fgets",
+          "test_vulnerable.c:29 Sink: gets(buffer)"
+        ],
+        "confidence": 0.85,
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "\n\nThe use of `gets` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Safe Alternative:** Replace `gets` with `fgets`. Always specify maximum buffer size with fgets",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 29,
+        "original_code": "gets(buffer); // VULNERABLE: Never use gets",
+        "patched_code": "fgets(buffer, sizeof(buffer), stdin)",
+        "explanation": "Replace dangerous gets with bounded fgets",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    gets(buffer); // VULNERABLE: Never use gets\n\n\n+    fgets(buffer, sizeof(buffer), stdin)\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-120"
+      },
+      "validation": null
+    },
+    {
+      "id": 2,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "user",
+        "alloc_site": "test_vulnerable.c:88 malloc",
+        "free_site": "test_vulnerable.c:94 free(user)",
+        "use_site": "test_vulnerable.c:97 user",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:88",
+            "expression": "User *user = malloc(sizeof(User));"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:90",
+            "expression": "user->id = 123;"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:92",
+            "expression": "strcpy(user->name, \"Alice\");"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:94",
+            "expression": "free(user);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:97",
+            "expression": "printf(\"User ID: %d\\n\", user->id);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 3,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:141 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 4,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:142 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 5,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:143 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 6,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:150 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 7,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:152 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 8,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:155 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 9,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:156 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 10,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:158 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 11,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:167 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 12,
+      "vuln_type": "USE_AFTER_FREE",
+      "severity": "HIGH",
+      "location": "",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-416"
+      ],
+      "evidence": {
+        "vuln_type": "USE_AFTER_FREE",
+        "pointer": "buffer",
+        "alloc_site": "test_vulnerable.c:125 malloc",
+        "free_site": "test_vulnerable.c:130 free(buffer)",
+        "use_site": "test_vulnerable.c:168 buffer",
+        "function": "",
+        "lifetime_violation": true,
+        "events": [
+          {
+            "type": "alloc",
+            "location": "test_vulnerable.c:125",
+            "expression": "char *buffer = malloc(buffer_size);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:127",
+            "expression": "if (buffer)"
+          },
+          {
+            "type": "free",
+            "location": "test_vulnerable.c:130",
+            "expression": "free(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:141",
+            "expression": "char buffer[32];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:142",
+            "expression": "strncpy(buffer, user_input, sizeof(buffer) - 1);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:143",
+            "expression": "buffer[sizeof(buffer) - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:150",
+            "expression": "char buffer[64];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:152",
+            "expression": "if (fgets(buffer, sizeof(buffer), stdin) != NULL)"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:155",
+            "expression": "size_t len = strlen(buffer);"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:156",
+            "expression": "if (len > 0 && buffer[len - 1] == '\\n')"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:158",
+            "expression": "buffer[len - 1] = '\\0';"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:167",
+            "expression": "char buffer[50];"
+          },
+          {
+            "type": "use",
+            "location": "test_vulnerable.c:168",
+            "expression": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age);"
+          }
+        ],
+        "confidence": 0.95,
+        "cwe_ids": [
+          "CWE-416"
+        ],
+        "severity": "HIGH",
+        "description": "Use of memory after it has been freed"
+      },
+      "explanation": "\n\nAccessing memory after it has been freed leads to undefined behavior. An attacker may be able to control the contents of the freed memory, potentially leading to arbitrary code execution.",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 13,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:20",
+      "sink": "strcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcpy",
+        "location": "test_vulnerable.c:20",
+        "buffer": "char buffer[50]",
+        "buffer_size": 50,
+        "input_source": "user_input",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:20 strcpy(buffer, user_input)"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncpy or strlcpy",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcpy` with `strncpy`. Use strncpy with explicit null termination, or strlcpy where available\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 20,
+        "original_code": "strcpy(buffer, user_input); // VULNERABLE: No bounds check",
+        "patched_code": "strncpy(buffer, user_input, sizeof(buffer) - 1); buffer[sizeof(buffer) - 1] = '\\0'",
+        "explanation": "Replace unbounded strcpy with strncpy and explicit null termination",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    strcpy(buffer, user_input); // VULNERABLE: No bounds check\n\n\n+    strncpy(buffer, user_input, sizeof(buffer) - 1); buffer[sizeof(buffer) - 1] = '\\0'\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    },
+    {
+      "id": 14,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "CRITICAL",
+      "location": "test_vulnerable.c:29",
+      "sink": "gets",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "gets",
+        "location": "test_vulnerable.c:29",
+        "buffer": "char buffer[50]",
+        "buffer_size": 50,
+        "input_source": "stdin",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:29 gets(buffer)"
+        ],
+        "confidence": 0.98,
+        "cwe_id": "CWE-120",
+        "safe_alternative": "fgets",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "CRITICAL",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Buffer Copy without Checking Size of Input** (CWE-120)\nThe program copies an input buffer to an output buffer without verifying that the size of the input buffer is less than the size of the output buffer, leading to a buffer overflow.\n\nThe use of `gets` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Always check input size before copying. Use strncpy, snprintf, or memcpy with proper size limits. Consider using safer alternatives like strlcpy where available.\n\n**Safe Alternative:** Replace `gets` with `fgets`. Always specify maximum buffer size with fgets\n\n**References:**\n- https://cwe.mitre.org/data/definitions/120.html\n- CERT C: STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 29,
+        "original_code": "gets(buffer); // VULNERABLE: Never use gets",
+        "patched_code": "fgets(buffer, sizeof(buffer), stdin)",
+        "explanation": "Replace dangerous gets with bounded fgets",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    gets(buffer); // VULNERABLE: Never use gets\n\n\n+    fgets(buffer, sizeof(buffer), stdin)\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-120"
+      },
+      "validation": null
+    },
+    {
+      "id": 15,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:37",
+      "sink": "sprintf",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "sprintf",
+        "location": "test_vulnerable.c:37",
+        "buffer": "char buffer[50]",
+        "buffer_size": 50,
+        "input_source": "format string",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:37 sprintf(buffer, \"Name: %s, Age: %d\", name, age); // VULNERABLE"
+        ],
+        "confidence": 0.8,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "snprintf",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `sprintf` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `sprintf` with `snprintf`. Always specify buffer size with snprintf\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 37,
+        "original_code": "sprintf(buffer, \"Name: %s, Age: %d\", name, age); // VULNERABLE",
+        "patched_code": "snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age)",
+        "explanation": "Replace sprintf with bounded snprintf",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    sprintf(buffer, \"Name: %s, Age: %d\", name, age); // VULNERABLE\n\n\n+    snprintf(buffer, sizeof(buffer), \"Name: %s, Age: %d\", name, age)\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    },
+    {
+      "id": 16,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:45",
+      "sink": "strcat",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcat",
+        "location": "test_vulnerable.c:45",
+        "buffer": "char greeting[20]",
+        "buffer_size": 20,
+        "input_source": "suffix",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:45 strcat(greeting, suffix)"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncat or strlcat",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcat` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcat` with `strncat`. Calculate remaining buffer space before concatenation\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 45,
+        "original_code": "strcat(greeting, suffix); // VULNERABLE: May overflow",
+        "patched_code": "strncat(greeting, suffix, sizeof(greeting) - strlen(greeting) - 1)",
+        "explanation": "Replace unbounded strcat with strncat with proper bounds",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    strcat(greeting, suffix); // VULNERABLE: May overflow\n\n\n+    strncat(greeting, suffix, sizeof(greeting) - strlen(greeting) - 1)\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    },
+    {
+      "id": 17,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:58",
+      "sink": "strcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcpy",
+        "location": "test_vulnerable.c:58",
+        "buffer": "char data[100]",
+        "buffer_size": 100,
+        "input_source": "\"sensitive data\"",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:58 strcpy(data, \"sensitive data\")"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncpy or strlcpy",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcpy` with `strncpy`. Use strncpy with explicit null termination, or strlcpy where available\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 58,
+        "original_code": "strcpy(data, \"sensitive data\");",
+        "patched_code": "strncpy(data, \"sensitive data\", sizeof(data) - 1); data[sizeof(data) - 1] = '\\0'",
+        "explanation": "Replace unbounded strcpy with strncpy and explicit null termination",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    strcpy(data, \"sensitive data\");\n\n\n+    strncpy(data, \"sensitive data\", sizeof(data) - 1); data[sizeof(data) - 1] = '\\0'\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    },
+    {
+      "id": 18,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:72",
+      "sink": "strcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcpy",
+        "location": "test_vulnerable.c:72",
+        "buffer": "char ptr[50]",
+        "buffer_size": 50,
+        "input_source": "\"test\"",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:72 strcpy(ptr, \"test\")"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncpy or strlcpy",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcpy` with `strncpy`. Use strncpy with explicit null termination, or strlcpy where available\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 72,
+        "original_code": "strcpy(ptr, \"test\");",
+        "patched_code": "strncpy(ptr, \"test\", sizeof(ptr) - 1); ptr[sizeof(ptr) - 1] = '\\0'",
+        "explanation": "Replace unbounded strcpy with strncpy and explicit null termination",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    strcpy(ptr, \"test\");\n\n\n+    strncpy(ptr, \"test\", sizeof(ptr) - 1); ptr[sizeof(ptr) - 1] = '\\0'\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    },
+    {
+      "id": 19,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:92",
+      "sink": "strcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcpy",
+        "location": "test_vulnerable.c:92",
+        "buffer": "char user->name[?]",
+        "buffer_size": null,
+        "input_source": "\"Alice\"",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:92 strcpy(user->name, \"Alice\")"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncpy or strlcpy",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcpy` with `strncpy`. Use strncpy with explicit null termination, or strlcpy where available\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 20,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:129",
+      "sink": "memcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "memcpy",
+        "location": "test_vulnerable.c:129",
+        "buffer": "buffer[50]",
+        "buffer_size": 50,
+        "input_source": "src",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:129 memcpy(buffer, src, len * 4)"
+        ],
+        "confidence": 0.7,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "manual bounds checking",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `memcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": null,
+      "validation": null
+    },
+    {
+      "id": 21,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "test_vulnerable.c:176",
+      "sink": "strcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcpy",
+        "location": "test_vulnerable.c:176",
+        "buffer": "char data[100]",
+        "buffer_size": 100,
+        "input_source": "\"sensitive data\"",
+        "bounds_check": false,
+        "taint_path": [
+          "test_vulnerable.c:176 strcpy(data, \"sensitive data\")"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncpy or strlcpy",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcpy` with `strncpy`. Use strncpy with explicit null termination, or strlcpy where available\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 176,
+        "original_code": "strcpy(data, \"sensitive data\");",
+        "patched_code": "strncpy(data, \"sensitive data\", sizeof(data) - 1); data[sizeof(data) - 1] = '\\0'",
+        "explanation": "Replace unbounded strcpy with strncpy and explicit null termination",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-    strcpy(data, \"sensitive data\");\n\n\n+    strncpy(data, \"sensitive data\", sizeof(data) - 1); data[sizeof(data) - 1] = '\\0'\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    },
+    {
+      "id": 22,
+      "vuln_type": "INTEGER_OVERFLOW",
+      "severity": "MEDIUM",
+      "location": "test_vulnerable.c:109",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-190"
+      ],
+      "evidence": {
+        "vuln_type": "INTEGER_OVERFLOW",
+        "expression": "count * sizeof(int",
+        "location": "test_vulnerable.c:109",
+        "used_in": "malloc(count * sizeof(int)",
+        "overflow_check": false,
+        "operand_types": [
+          "int",
+          "int"
+        ],
+        "confidence": 0.75,
+        "cwe_id": "CWE-190",
+        "cwe_ids": [
+          "CWE-190"
+        ],
+        "severity": "MEDIUM",
+        "description": "Integer overflow leading to memory corruption"
+      },
+      "explanation": "**Integer Overflow or Wraparound** (CWE-190)\nThe software performs a calculation that can produce an integer overflow or wraparound, when the logic assumes that the resulting value will always be larger than the original value.\n\nInteger overflow in size calculations can result in smaller-than-expected allocations. When the program then writes to this buffer assuming the original size, a heap buffer overflow occurs.\n\n**Remediation:** Check for potential overflow before arithmetic operations. Use compiler builtins like __builtin_mul_overflow. Validate that integer values are within expected ranges before use in memory allocation or array indexing.\n\n**References:**\n- https://cwe.mitre.org/data/definitions/190.html\n- CERT C: INT30-C, INT32-C",
+      "patch": {
+        "vuln_type": "INTEGER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 109,
+        "original_code": "malloc(count * sizeof(int)",
+        "patched_code": "if (count > 0 && sizeof(int > SIZE_MAX / count) {\n        // Handle overflow\n        return NULL;\n    }\n    malloc(count * sizeof(int)",
+        "explanation": "Use safe multiplication with overflow check",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-malloc(count * sizeof(int)\n\n+if (count > 0 && sizeof(int > SIZE_MAX / count) {\n        // Handle overflow\n        return NULL;\n    }\n    malloc(count * sizeof(int)\n",
+        "confidence": 0.75,
+        "cwe_reference": "CWE-190"
+      },
+      "validation": null
+    },
+    {
+      "id": 23,
+      "vuln_type": "INTEGER_OVERFLOW",
+      "severity": "MEDIUM",
+      "location": "test_vulnerable.c:124",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-190"
+      ],
+      "evidence": {
+        "vuln_type": "INTEGER_OVERFLOW",
+        "expression": "len * 4",
+        "location": "test_vulnerable.c:124",
+        "used_in": "buffer_size = len * 4",
+        "overflow_check": false,
+        "operand_types": [],
+        "confidence": 0.6,
+        "cwe_id": "CWE-190",
+        "cwe_ids": [
+          "CWE-190"
+        ],
+        "severity": "MEDIUM",
+        "description": "Integer overflow leading to memory corruption"
+      },
+      "explanation": "**Integer Overflow or Wraparound** (CWE-190)\nThe software performs a calculation that can produce an integer overflow or wraparound, when the logic assumes that the resulting value will always be larger than the original value.\n\nInteger overflow in size calculations can result in smaller-than-expected allocations. When the program then writes to this buffer assuming the original size, a heap buffer overflow occurs.\n\n**Remediation:** Check for potential overflow before arithmetic operations. Use compiler builtins like __builtin_mul_overflow. Validate that integer values are within expected ranges before use in memory allocation or array indexing.\n\n**References:**\n- https://cwe.mitre.org/data/definitions/190.html\n- CERT C: INT30-C, INT32-C",
+      "patch": {
+        "vuln_type": "INTEGER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 124,
+        "original_code": "buffer_size = len * 4",
+        "patched_code": "if (len > 0 && 4 > SIZE_MAX / len) {\n        // Handle overflow\n        return NULL;\n    }\n    buffer_size = len * 4",
+        "explanation": "Use safe multiplication with overflow check",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-buffer_size = len * 4\n\n+if (len > 0 && 4 > SIZE_MAX / len) {\n        // Handle overflow\n        return NULL;\n    }\n    buffer_size = len * 4\n",
+        "confidence": 0.75,
+        "cwe_reference": "CWE-190"
+      },
+      "validation": null
+    },
+    {
+      "id": 24,
+      "vuln_type": "INTEGER_OVERFLOW",
+      "severity": "MEDIUM",
+      "location": "test_vulnerable.c:196",
+      "sink": "",
+      "cwe_ids": [
+        "CWE-190"
+      ],
+      "evidence": {
+        "vuln_type": "INTEGER_OVERFLOW",
+        "expression": "count * sizeof(int",
+        "location": "test_vulnerable.c:196",
+        "used_in": "malloc(count * sizeof(int)",
+        "overflow_check": false,
+        "operand_types": [
+          "int",
+          "int"
+        ],
+        "confidence": 0.75,
+        "cwe_id": "CWE-190",
+        "cwe_ids": [
+          "CWE-190"
+        ],
+        "severity": "MEDIUM",
+        "description": "Integer overflow leading to memory corruption"
+      },
+      "explanation": "**Integer Overflow or Wraparound** (CWE-190)\nThe software performs a calculation that can produce an integer overflow or wraparound, when the logic assumes that the resulting value will always be larger than the original value.\n\nInteger overflow in size calculations can result in smaller-than-expected allocations. When the program then writes to this buffer assuming the original size, a heap buffer overflow occurs.\n\n**Remediation:** Check for potential overflow before arithmetic operations. Use compiler builtins like __builtin_mul_overflow. Validate that integer values are within expected ranges before use in memory allocation or array indexing.\n\n**References:**\n- https://cwe.mitre.org/data/definitions/190.html\n- CERT C: INT30-C, INT32-C",
+      "patch": {
+        "vuln_type": "INTEGER_OVERFLOW",
+        "file": "test_vulnerable.c",
+        "line": 196,
+        "original_code": "malloc(count * sizeof(int)",
+        "patched_code": "if (count > 0 && sizeof(int > SIZE_MAX / count) {\n        // Handle overflow\n        return NULL;\n    }\n    malloc(count * sizeof(int)",
+        "explanation": "Use safe multiplication with overflow check",
+        "diff": "--- a/test_vulnerable.c\n+++ b/test_vulnerable.c\n@@ -1 +1 @@\n-malloc(count * sizeof(int)\n\n+if (count > 0 && sizeof(int > SIZE_MAX / count) {\n        // Handle overflow\n        return NULL;\n    }\n    malloc(count * sizeof(int)\n",
+        "confidence": 0.75,
+        "cwe_reference": "CWE-190"
+      },
+      "validation": null
+    }
+  ],
+  "metadata": {
+    "bat_version": "1.0.0",
+    "report_format": "v1"
+  }
+}

@@ -1,0 +1,15 @@
+# BAT - Autonomous Vulnerability Investigation
+# Core dependencies
+
+# Optional: Enhanced AST parsing with libclang
+# Uncomment if you have libclang installed
+# clang>=14.0
+
+# No external dependencies required for basic functionality
+# The tool uses only Python standard library for core features
+
+# Optional development dependencies
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=23.0.0
+# mypy>=1.0.0

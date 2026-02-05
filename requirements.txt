@@ -1,0 +1,6 @@
+# Minimal runtime requirements
+# No third-party dependencies are strictly required for the current implementation.
+# Add packages here if you install extras (e.g., clang bindings)
+
+# Dev/test
+pytest>=7.0

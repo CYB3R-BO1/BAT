@@ -1,0 +1,70 @@
+{
+  "title": "BAT Security Report",
+  "project": "bo.c",
+  "scan_date": "2026-02-05T22:32:12.814954",
+  "summary": {
+    "total_vulnerabilities": 1,
+    "severity_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 1,
+      "MEDIUM": 0,
+      "LOW": 0
+    },
+    "type_distribution": {
+      "BUFFER_OVERFLOW": 1
+    },
+    "files_analyzed": 1,
+    "functions_analyzed": 0
+  },
+  "findings": [
+    {
+      "id": 1,
+      "vuln_type": "BUFFER_OVERFLOW",
+      "severity": "HIGH",
+      "location": "bo.c:8",
+      "sink": "strcpy",
+      "cwe_ids": [
+        "CWE-787",
+        "CWE-120"
+      ],
+      "evidence": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "sink": "strcpy",
+        "location": "bo.c:8",
+        "buffer": "char buffer[10]",
+        "buffer_size": 10,
+        "input_source": "str",
+        "bounds_check": false,
+        "taint_path": [
+          "bo.c:8 strcpy(buffer, str)"
+        ],
+        "confidence": 0.85,
+        "cwe_id": "CWE-787",
+        "safe_alternative": "strncpy or strlcpy",
+        "cwe_ids": [
+          "CWE-787",
+          "CWE-120"
+        ],
+        "severity": "HIGH",
+        "description": "Out-of-bounds write to memory buffer"
+      },
+      "explanation": "**Out-of-bounds Write** (CWE-787)\nThe software writes data past the end, or before the beginning, of the intended buffer. This typically occurs when a pointer or its index is incremented to a position beyond the bounds of the buffer.\n\nThe use of `strcpy` without proper bounds checking can allow an attacker to write data beyond the allocated buffer, potentially leading to code execution or denial of service.\n\n**Remediation:** Use bounded string functions (strncpy, snprintf) and always validate buffer sizes before writing. Use sizeof() to determine buffer size and ensure write operations respect these limits.\n\n**Safe Alternative:** Replace `strcpy` with `strncpy`. Use strncpy with explicit null termination, or strlcpy where available\n\n**References:**\n- https://cwe.mitre.org/data/definitions/787.html\n- CERT C: ARR30-C, STR31-C",
+      "patch": {
+        "vuln_type": "BUFFER_OVERFLOW",
+        "file": "bo.c",
+        "line": 8,
+        "original_code": "strcpy(buffer, str);",
+        "patched_code": "strncpy(buffer, str, sizeof(buffer) - 1); buffer[sizeof(buffer) - 1] = '\\0'",
+        "explanation": "Replace unbounded strcpy with strncpy and explicit null termination",
+        "diff": "--- a/bo.c\n+++ b/bo.c\n@@ -1 +1 @@\n-    strcpy(buffer, str);\n\n\n+    strncpy(buffer, str, sizeof(buffer) - 1); buffer[sizeof(buffer) - 1] = '\\0'\n",
+        "confidence": 0.85,
+        "cwe_reference": "CWE-787"
+      },
+      "validation": null
+    }
+  ],
+  "metadata": {
+    "bat_version": "1.0.0",
+    "report_format": "v1"
+  }
+}
